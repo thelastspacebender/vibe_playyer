@@ -20,10 +20,12 @@ data_analysis.xla
 Modbus*
 check_torrent.ps1
 
-# Old backups & duplicate root models (actual models are in assets/models/)
+# Old heavy backups (>100MB)
+assets/models/backup/
+/minas_tirith_-_minecraft.glb
+/stormtrooper_captain_by_oscar_creativo.glb
+
+# Loose duplicate root files (working models are neatly in assets/models/)
 /*.glb
 index_backup.html
 downloads_index.html
-assets/models/backup/
-minas_tirith_-_minecraft.glb
-stormtrooper_captain_by_oscar_creativo.glb
