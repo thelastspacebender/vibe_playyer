@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Skyline Player · Multi-Universe 3D/2D Visualizer</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Karantina:wght@400;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="./css/style.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./libs/three/three.module.js",
+      "three/addons/": "./libs/three/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="three-container"></div>
+  <canvas id="scene" aria-label="Skyline visualizer"></canvas>
+
+  <div id="scene-fade-overlay"></div>
+
+  <div id="loading-screen">
+    <div style="font-size:1.6rem;font-weight:700;letter-spacing:0.02em;" id="loading-title" data-i18n="loading_world">Loading 3D World...</div>
+    <div style="width:280px;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);">
+      <div id="loading-bar" style="width:0%;height:100%;background:linear-gradient(90deg, #ffb86b, #b866ff);border-radius:4px;transition:width 0.2s ease;"></div>
+    </div>
+    <div id="loading-pct" style="font-size:0.95rem;color:#9aa2d0;font-family:monospace;">0%</div>
+  </div>
+
+  <div id="mafia-badge">
+    <button id="mafiaBtn" type="button">
+      <span id="mafiaDot"></span>
+      <span id="mafiaText" data-i18n="mafia_active">🎥 Cinematic Camera (Active)</span>
+    </button>
+  </div>
+
+  <div id="hp-panel" class="world-3d-panel">
+    <div class="panel-pill-wrap">
+      <button id="hpGryffBtn" type="button" class="panel-pill active" data-i18n="hp_gryff">🦁 Gryffindor</button>
+      <button id="hpDumbBtn" type="button" class="panel-pill" data-i18n="hp_dumb">🦉 Dumbledore's Office</button>
+      <button id="hpAutoBtn" type="button" class="panel-pill active" data-i18n="hp_auto" data-i18n-title="hp_auto_title" title="Auto-switch rooms every 45 seconds">⏳ Auto-Switch (45s)</button>
+    </div>
+    <div id="hpProgressWrap" style="width:100%;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;">
+      <div id="hpProgressBar" style="width:0%;height:100%;background:#ffb86b;transition:width 0.1s linear;"></div>
+    </div>
+  </div>
+
+  <div id="lotr-panel" class="world-3d-panel">
+    <div class="panel-pill-wrap">
+      <button id="lotrStreetsBtn" type="button" class="panel-pill" data-i18n="lotr_streets">🏰 Streets & Walls</button>
+      <button id="lotrTreeBtn" type="button" class="panel-pill" data-i18n="lotr_tree">🌳 White Tree</button>
+      <button id="lotrEagleBtn" type="button" class="panel-pill" data-i18n="lotr_eagle">🦅 Eagle Flight</button>
+      <button id="lotrCycleBtn" type="button" class="panel-pill active" data-i18n="lotr_cycle">🎬 Director Mode (Cycle)</button>
+    </div>
+  </div>
+
+  <div id="sw-panel" class="world-3d-panel">
+    <div class="panel-pill-wrap" id="swHeroButtons">
+      <button id="swHeroCaptainBtn" type="button" class="panel-pill active" data-i18n="sw_captain">🎖️ Captain Stormtrooper</button>
+      <button id="swHeroYodaBtn" type="button" class="panel-pill" data-i18n="sw_yoda">🧙 Master Yoda</button>
+      <button id="swHeroR2D2Btn" type="button" class="panel-pill" data-i18n="sw_r2d2">🤖 R2-D2</button>
+      <button id="swHeroK2SOBtn" type="button" class="panel-pill" data-i18n="sw_k2so">🦾 K-2SO Droid</button>
+      <button id="swHeroDancingBtn" type="button" class="panel-pill" data-i18n="sw_dancing">💃 Dancing Trooper</button>
+      <label id="swFolderLabel" class="panel-pill file-pill" style="cursor:pointer;" data-i18n-title="sw_folder_title" title="Add custom .GLB models from folder">
+        <span data-i18n="sw_add_folder">📂 Add Folder (.GLB)</span>
+        <input id="swFolderInput" type="file" webkitdirectory directory multiple style="display:none;" accept=".glb,.gltf">
+      </label>
+    </div>
+  </div>
+
+  <section class="intro" id="intro">
+    <div class="intro-header">
+      <h1><span data-i18n="intro_title_1">Skyline</span> <em data-i18n="intro_title_2">Player</em></h1>
+      <div class="lang-pills" id="introLangPills">
+        <button type="button" class="lang-pill active" data-lang="en">EN</button>
+        <button type="button" class="lang-pill" data-lang="ru">RU</button>
+        <button type="button" class="lang-pill" data-lang="he">עב</button>
+      </div>
+    </div>
+    <p data-i18n="intro_desc">Your music is already loaded. Click Play to start, and the city lights will pulse with the rhythm. Cars travel along the highways, people walk through the park, and day turns into night. The visualizer loops smoothly until auto-stop.</p>
+    <div class="row">
+      <button class="primary" id="pickBtn" type="button" data-i18n="btn_play_music">▶ Play Music</button>
+      <label class="txt" for="file" data-i18n="btn_choose_device">Choose audio file</label>
+    </div>
+    <p class="err" id="err" hidden></p>
+    <span class="keys" data-i18n="intro_worlds_note">In the "World" menu, you can switch to Snowy North, Medieval Village, Yennefer's Chamber, Hogwarts, Minas Tirith, or Jedi Council.</span>
+    <span class="keys desk" data-i18n="intro_keys_note"><kbd>Space</kbd> Play/Pause · <kbd>F</kbd> Fullscreen · Controls auto-hide after 3.5s of inactivity</span>
+  </section>
+
+  <div class="ui" id="ui">
+    <button class="icon play" id="playBtn" type="button" aria-label="Play" data-i18n-aria="aria_play">
+      <svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4.5v15l13-7.5z"/></svg>
+    </button>
+    <div class="track">
+      <b id="trackName" data-i18n="track_default">Cities Skylines 2 · Click Play</b>
+      <span id="clock">00:00:00</span>
+    </div>
+    <label class="ctl"><span data-i18n="ctl_volume">Volume</span>
+      <input type="range" id="vol" min="0" max="100" value="70">
+    </label>
+    <label class="ctl"><span data-i18n="ctl_react">Reactivity</span>
+      <input type="range" id="react" min="0" max="100" value="65">
+    </label>
+    <label class="ctl"><span data-i18n="ctl_stop_after">Auto-Stop</span>
+      <select id="stopAfter">
+        <option value="0" data-i18n="stop_0">Disabled</option>
+        <option value="1" data-i18n="stop_1">After 1 hour</option>
+        <option value="2" data-i18n="stop_2">After 2 hours</option>
+        <option value="4" selected data-i18n="stop_4">After 4 hours</option>
+        <option value="8" data-i18n="stop_8">After 8 hours</option>
+      </select>
+    </label>
+    <label class="ctl"><span data-i18n="ctl_world">World</span>
+      <select id="world">
+        <option value="city" selected data-i18n="world_city">2D City Skyline</option>
+        <option value="north" data-i18n="world_north">2D Snowy North</option>
+        <option value="medieval" data-i18n="world_medieval">2D Medieval Village</option>
+        <option value="yennefer" data-i18n="world_yennefer">Witcher · Yennefer's Chamber</option>
+        <option value="harry_potter" data-i18n="world_harry_potter">Harry Potter · Hogwarts</option>
+        <option value="lotr" data-i18n="world_lotr">LOTR · Minas Tirith & White Tree</option>
+        <option value="star_wars" data-i18n="world_star_wars">Star Wars · Jedi Council</option>
+      </select>
+    </label>
+    <label class="ctl"><span data-i18n="ctl_cycle">Day & Night</span>
+      <select id="cycle">
+        <option value="600" data-i18n="cycle_600">10-minute cycle</option>
+        <option value="1800" selected data-i18n="cycle_1800">30-minute cycle</option>
+        <option value="3600" data-i18n="cycle_3600">1-hour cycle</option>
+        <option value="real" data-i18n="cycle_real">Real-time clock</option>
+        <option value="night" data-i18n="cycle_night">Always Night</option>
+        <option value="day" data-i18n="cycle_day">Always Day</option>
+      </select>
+    </label>
+    <label class="ctl" id="langCtl"><span data-i18n="ctl_language">Language</span>
+      <select id="langSelect" aria-label="Language / Язык / שפה">
+        <option value="en">English (EN)</option>
+        <option value="ru">Русский (RU)</option>
+        <option value="he">עברית (HE)</option>
+      </select>
+    </label>
+    <label class="txt" for="file" data-i18n="btn_choose_file">Choose audio</label>
+    <button class="txt" id="fsBtn" type="button" data-i18n="btn_fullscreen">Fullscreen</button>
+  </div>
+
+  <div class="drop" id="drop" hidden data-i18n="drop_overlay">Drop your audio file here</div>
+  <input type="file" id="file" class="vh" accept="audio/*,.mp3,.m4a" tabindex="-1">
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

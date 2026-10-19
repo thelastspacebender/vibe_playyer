@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Minas Tirith Viewer - Vertex Colors & Cinematic Lighting</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 18px;
+            background: rgba(10, 15, 25, 0.88);
+            padding: 16px 28px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            text-align: center;
+            z-index: 99;
+        }
+        #info {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            color: #ddd;
+            font-size: 13px;
+            background: rgba(10, 15, 25, 0.75);
+            padding: 12px 18px;
+            border-radius: 10px;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            z-index: 10;
+        }
+        #info h3 { margin: 0 0 6px 0; color: #ffddaa; font-size: 15px; }
+    </style>
+</head>
+<body>
+<div id="loading">Загрузка и распаковка Minas Tirith (Draco + Vertex Colors)...</div>
+<div id="info">
+    <h3>Минас Тирит (Minecraft Voxels)</h3>
+    <div>• Режим: 100% Локальный (Offline Draco / WebGL)</div>
+    <div>• Vertex Colors (COLOR_0): <span style="color:#66ff88;">Включены</span></div>
+    <div>• Освещение: Кинематографичное Солнце + Небо + PCFSoftShadowMap</div>
+    <div>• Управление: ЛКМ — Вращение | ПКМ — Панорамирование | Колесо — Зум</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./libs/three/three.module.js",
+    "three/addons/": "./libs/three/addons/"
+  }
+}
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+    const loadingEl = document.getElementById('loading');
+
+    // 1. Создаем сцену с эффектом атмосферной дымки
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a1d24);
+    scene.fog = new THREE.FogExp2(0x1a1d24, 0.0025);
+
+    // 2. Настраиваем камеру
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(0, 100, 250);
+
+    // 3. Рендерер с кино-фильтрами под iGPU AMD Radeon
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
+    document.body.appendChild(renderer.domElement);
+
+    // 4. Управление мышью
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+
+    // 5. Кинематографичный свет
+    const hemiLight = new THREE.HemisphereLight(0x4466aa, 0x112233, 1.5);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xffddaa, 3.5);
+    sunLight.position.set(100, 150, 50);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(1024, 1024);
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 500;
+    const d = 130;
+    sunLight.shadow.camera.left = -d;
+    sunLight.shadow.camera.right = d;
+    sunLight.shadow.camera.top = d;
+    sunLight.shadow.camera.bottom = -d;
+    sunLight.shadow.bias = -0.0005;
+    scene.add(sunLight);
+
+    const fillLight = new THREE.DirectionalLight(0x557799, 0.9);
+    fillLight.position.set(-80, 50, -80);
+    scene.add(fillLight);
+
+    // 6. Загрузчик с локальным Draco
+    const loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('./libs/draco/');
+    loader.setDRACOLoader(draco);
+
+    console.log('Loading minas_tirith.glb via local Draco...');
+    loader.load(
+        './minas_tirith.glb',
+        (gltf) => {
+            const model = gltf.scene;
+            let meshCount = 0;
+
+            // Принудительно включаем цвета, тени и матовый камень
+            model.traverse((child) => {
+                if (child.isMesh) {
+                    meshCount++;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    if (child.material) {
+                        child.material.vertexColors = true; // Возвращает цвета Minecraft (COLOR_0)
+                        child.material.roughness = 0.85;
+                        child.material.metalness = 0.0;
+                        child.material.needsUpdate = true;
+                    }
+                }
+            });
+
+            // Центрируем модель
+            const box = new THREE.Box3().setFromObject(model);
+            const center = box.getCenter(new THREE.Vector3());
+            model.position.sub(center);
+
+            scene.add(model);
+            console.log(`Minas Tirith successfully loaded: ${meshCount} meshes rendered.`);
+
+            if (loadingEl) {
+                loadingEl.style.opacity = '0';
+                setTimeout(() => loadingEl.remove(), 400);
+            }
+        },
+        (xhr) => {
+            if (xhr.lengthComputable && loadingEl) {
+                const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                loadingEl.innerText = `Загрузка геометрии: ${percent}%...`;
+            }
+        },
+        (error) => {
+            console.error('Ошибка загрузки модели:', error);
+            if (loadingEl) {
+                loadingEl.innerText = 'Ошибка загрузки minas_tirith.glb: ' + (error.message || error);
+                loadingEl.style.color = '#ff6666';
+            }
+        }
+    );
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+# Compiled binaries (255MB exceeds GitHub 100MB limit; built locally via BUILD_EXE.bat)
+*.exe
+build_args.rsp
+
+# Dependencies & system
+node_modules/
+.vscode/
+.idea/
+
+# External tools & compilers
+mingw64/
+python/
+
+# Temporary and non-project files
+*.tmp
+*.log
+temp_img_*
+step_943.txt
+data_analysis.xla
+Modbus*
+check_torrent.ps1
+
+# Old backups & duplicate root models (actual models are in assets/models/)
+/*.glb
+index_backup.html
+downloads_index.html
+assets/models/backup/
+minas_tirith_-_minecraft.glb
+stormtrooper_captain_by_oscar_creativo.glb
