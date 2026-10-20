@@ -29,3 +29,8 @@ assets/models/backup/
 /*.glb
 index_backup.html
 downloads_index.html
+
+# Audio library (downloaded files exceed GitHub limit)
+assets/audio/*
+!assets/audio/.gitkeep
+

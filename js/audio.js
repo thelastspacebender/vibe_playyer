@@ -7,7 +7,11 @@ export let bass = 0, highs = 0, energy = 0;
 let actx = null, analyser = null, gainNode = null, fbuf = null;
 const BUILTIN = [];
 const els = [new Audio(), new Audio()];
-els.forEach(a => { a.preload = 'auto'; a.setAttribute('playsinline', ''); });
+els.forEach(a => {
+    a.preload = 'auto';
+    a.setAttribute('playsinline', '');
+    a.crossOrigin = 'anonymous';
+});
 let active = els[0], tracks = [], cur = 0;
 let fileLoaded = false, playing = false, fading = false, objURL = null;
 let acc = 0, playStart = 0, finishedNote = '';

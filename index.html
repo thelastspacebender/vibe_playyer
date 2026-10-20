@@ -86,6 +86,10 @@
     <p data-i18n="intro_desc">Your music is already loaded. Click Play to start, and the city lights will pulse with the rhythm. Cars travel along the highways, people walk through the park, and day turns into night. The visualizer loops smoothly until auto-stop.</p>
     <div class="row">
       <button class="primary" id="pickBtn" type="button" data-i18n="btn_play_music">▶ Play Music</button>
+      <button class="primary yt-hero-btn" id="introYtBtn" type="button">
+        <svg viewBox="0 0 24 24" class="yt-svg-icon"><path fill="currentColor" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        <span data-i18n="btn_youtube">🔗 YouTube</span>
+      </button>
       <label class="txt" for="file" data-i18n="btn_choose_device">Choose audio file</label>
     </div>
     <p class="err" id="err" hidden></p>
@@ -144,12 +148,90 @@
         <option value="he">עברית (HE)</option>
       </select>
     </label>
+    <button class="txt yt-bar-btn" id="uiYtBtn" type="button">
+      <svg viewBox="0 0 24 24" class="yt-svg-icon"><path fill="#ff4444" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      <span data-i18n="btn_youtube_label">YouTube</span>
+    </button>
     <label class="txt" for="file" data-i18n="btn_choose_file">Choose audio</label>
     <button class="txt" id="fsBtn" type="button" data-i18n="btn_fullscreen">Fullscreen</button>
   </div>
 
   <div class="drop" id="drop" hidden data-i18n="drop_overlay">Drop your audio file here</div>
   <input type="file" id="file" class="vh" accept="audio/*,.mp3,.m4a" tabindex="-1">
+
+  <!-- YouTube Modal Dialog -->
+  <div id="yt-modal" class="yt-modal" hidden>
+    <div class="yt-modal-backdrop" id="ytModalBackdrop"></div>
+    <div class="yt-modal-content">
+      <div class="yt-modal-header">
+        <div class="yt-title-wrap">
+          <svg viewBox="0 0 24 24" class="yt-modal-logo"><path fill="#ff3333" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <h2 data-i18n="yt_modal_title">YouTube Music Loader</h2>
+        </div>
+        <button class="yt-close-btn" id="ytCloseBtn" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div class="yt-modal-body">
+        <div class="yt-input-row">
+          <input type="text" id="ytUrlInput" class="yt-input" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" spellcheck="false">
+          <button type="button" id="ytFetchBtn" class="yt-action-btn yt-search-btn" data-i18n="yt_btn_find">🔍 Find</button>
+        </div>
+        <div id="ytErrorMsg" class="yt-error" hidden></div>
+
+        <!-- Loading spinner -->
+        <div id="ytLoading" class="yt-loading" hidden>
+          <div class="yt-spinner"></div>
+          <span id="ytLoadingText" data-i18n="yt_loading_info">Getting video details...</span>
+        </div>
+
+        <!-- Preview Card -->
+        <div id="ytPreviewCard" class="yt-card" hidden>
+          <div class="yt-card-thumb-wrap">
+            <img id="ytCardThumb" class="yt-card-thumb" src="" alt="Thumbnail">
+            <span id="ytCardDuration" class="yt-card-duration">00:00</span>
+          </div>
+          <div class="yt-card-info">
+            <div id="ytCardTitle" class="yt-card-title">Title</div>
+            <div id="ytCardChannel" class="yt-card-channel">Channel</div>
+            <div class="yt-card-actions">
+              <button type="button" id="ytStreamBtn" class="yt-action-btn yt-play-btn" data-i18n="yt_btn_stream">
+                ⚡ Play Instantly
+              </button>
+              <button type="button" id="ytDownloadBtn" class="yt-action-btn yt-dl-btn" data-i18n="yt_btn_download">
+                💾 Download MP3 (320k)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Download Progress Box -->
+        <div id="ytProgressWrap" class="yt-progress-box" hidden>
+          <div class="yt-progress-label">
+            <span id="ytProgressStatus">Downloading audio...</span>
+            <span id="ytProgressPct">0%</span>
+          </div>
+          <div class="yt-progress-bar-bg">
+            <div id="ytProgressBar" class="yt-progress-bar"></div>
+          </div>
+          <div class="yt-progress-meta">
+            <span id="ytProgressSpeed">-- MB/s</span>
+            <span id="ytProgressEta">ETA --</span>
+          </div>
+        </div>
+
+        <!-- Saved Tracks Library -->
+        <div class="yt-library-section">
+          <div class="yt-library-header">
+            <span data-i18n="yt_library_title">📁 Saved Library</span>
+            <button type="button" id="ytRefreshLibBtn" class="yt-lib-refresh" title="Refresh library">🔄</button>
+          </div>
+          <div id="ytLibraryList" class="yt-library-list">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="./js/main.js"></script>
 </body>

@@ -65,7 +65,19 @@ export const TRANSLATIONS = {
         sw_dancing: '💃 Dancing Trooper',
         sw_add_folder: '📂 Add Folder (.GLB)',
         sw_folder_title: 'Add custom .GLB models from folder',
-        sw_no_models_found: 'No .GLB or .GLTF files found in selected folder!'
+        sw_no_models_found: 'No .GLB or .GLTF files found in selected folder!',
+        // YouTube modal
+        btn_youtube: '🔗 YouTube',
+        btn_youtube_label: 'YouTube',
+        yt_modal_title: 'YouTube Music Loader',
+        yt_btn_find: '🔍 Find',
+        yt_loading_info: 'Fetching video details...',
+        yt_btn_stream: '⚡ Play Instantly',
+        yt_btn_download: '💾 Download MP3 (320k)',
+        yt_library_title: '📁 Saved Library',
+        yt_library_empty: 'No downloaded tracks yet',
+        yt_invalid_url: 'Please enter a valid YouTube link',
+        yt_error_fetching: 'Failed to retrieve video details'
     },
     ru: {
         page_title: 'נגן קו הרקיע · Мульти-вселенский 3D/2D Визуализатор',
@@ -131,7 +143,19 @@ export const TRANSLATIONS = {
         sw_dancing: '💃 Танцующий Штурмовик',
         sw_add_folder: '📂 Добавить папку (.GLB)',
         sw_folder_title: 'Добавить свои .GLB модели из выбранной папки',
-        sw_no_models_found: 'В выбранной папке не найдено файлов .GLB или .GLTF!'
+        sw_no_models_found: 'В выбранной папке не найдено файлов .GLB или .GLTF!',
+        // YouTube modal
+        btn_youtube: '🔗 YouTube',
+        btn_youtube_label: 'YouTube',
+        yt_modal_title: 'Загрузка музыки из YouTube',
+        yt_btn_find: '🔍 Найти',
+        yt_loading_info: 'Получение данных о видео...',
+        yt_btn_stream: '⚡ Слушать сразу',
+        yt_btn_download: '💾 Скачать MP3 (320k)',
+        yt_library_title: '📁 Сохранённая музыка',
+        yt_library_empty: 'Пока нет сохранённых треков',
+        yt_invalid_url: 'Пожалуйста, укажите верную ссылку на YouTube',
+        yt_error_fetching: 'Не удалось получить данные о видео'
     },
     he: {
         page_title: 'נגן קו הרקיע · ויזואלייזר תלת-ממד ודו-ממד רב-יקומי',
@@ -197,7 +221,19 @@ export const TRANSLATIONS = {
         sw_dancing: '💃 טרופר רוקד',
         sw_add_folder: '📂 הוסף תיקייה (.GLB)',
         sw_folder_title: 'הוסף מודלים .GLB מתיקייה מקומית',
-        sw_no_models_found: 'לא נמצאו קובצי .GLB או .GLTF בתיקייה שנבחרה!'
+        sw_no_models_found: 'לא נמצאו קובצי .GLB או .GLTF בתיקייה שנבחרה!',
+        // YouTube modal
+        btn_youtube: '🔗 יוטיוב',
+        btn_youtube_label: 'יוטיוב',
+        yt_modal_title: 'טוען מוזיקה מיוטיוב',
+        yt_btn_find: '🔍 מצא',
+        yt_loading_info: 'טוען פרטי סרטון...',
+        yt_btn_stream: '⚡ השמע מיידית',
+        yt_btn_download: '💾 הורד MP3 (320k)',
+        yt_library_title: '📁 רצועות שמורות',
+        yt_library_empty: 'אין עדיין רצועות שמורות',
+        yt_invalid_url: 'נא להזין קישור תקין ליוטיוב',
+        yt_error_fetching: 'טעינת פרטי הסרטון נכשלה'
     }
 };
 

@@ -37,6 +37,8 @@ import {
     getCurrentLanguage
 } from './i18n.js';
 
+import { initYouTubeModal } from './youtube.js';
+
 // DOM References
 const sceneCanvas = document.getElementById('scene');
 const threeContainer = document.getElementById('three-container');
@@ -222,6 +224,21 @@ function setupEventListeners() {
         if (dropEl) dropEl.hidden = true;
         if (e.dataTransfer && e.dataTransfer.files.length > 0) {
             loadUserTrack(e.dataTransfer.files[0]);
+        }
+    });
+
+    // YouTube Integration
+    initYouTubeModal({
+        onPlayTrack: (url, title) => {
+            setTracks([url], title);
+            startAudio();
+            if (introEl) {
+                introEl.classList.add('hide');
+                introEl.hidden = true;
+                introEl.style.display = 'none';
+            }
+            if (trackNameEl) trackNameEl.textContent = title;
+            if (playStartTime === 0) playStartTime = performance.now();
         }
     });
 }
