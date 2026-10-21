@@ -73,6 +73,23 @@ if (fs.existsSync(path.join(baseDir, 'app.ico'))) {
     });
 }
 
+// Add standalone binary tools (yt-dlp & ffmpeg)
+const binTools = [
+    { file: 'yt-dlp.exe', path: path.join(baseDir, 'bin', 'yt-dlp.exe') },
+    { file: 'ffmpeg.exe', path: path.join(baseDir, 'bin', 'ffmpeg.exe') }
+];
+for (const tool of binTools) {
+    if (fs.existsSync(tool.path)) {
+        const sz = fs.statSync(tool.path).size;
+        filesToEmbed.push({
+            fullPath: tool.path,
+            relPath: `bin/${tool.file}`,
+            size: sz
+        });
+        console.log(`[EMBED] Standalone tool: ${tool.file} (${(sz / (1024 * 1024)).toFixed(2)} MB)`);
+    }
+}
+
 console.log(`Collected ${filesToEmbed.length} files to embed.`);
 const totalBytes = filesToEmbed.reduce((sum, f) => sum + f.size, 0);
 console.log(`Total payload size: ${(totalBytes / (1024 * 1024)).toFixed(2)} MB`);
@@ -81,6 +98,7 @@ console.log(`Total payload size: ${(totalBytes / (1024 * 1024)).toFixed(2)} MB`)
 const rspPath = path.join(baseDir, 'build_args.rsp');
 const rspLines = [
     '/target:winexe',
+    '/platform:x64',
     `/win32icon:"${path.join(baseDir, 'app.ico').replace(/\\/g, '/')}"`,
     `/out:"${path.join(baseDir, 'VibePlayer.exe').replace(/\\/g, '/')}"`
 ];

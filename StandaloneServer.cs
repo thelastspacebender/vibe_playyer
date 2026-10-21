@@ -38,26 +38,122 @@ namespace VibePlayer
 
         private static Dictionary<string, DownloadJob> downloadJobs = new Dictionary<string, DownloadJob>();
         private static readonly object jobsLock = new object();
+        private static string extractedBinDir;
+
+        private static void EnsureExtractedTools()
+        {
+            try
+            {
+                string localBin = Path.Combine(baseDir, "bin");
+                string localYt = Path.Combine(localBin, "yt-dlp.exe");
+                string localFf = Path.Combine(localBin, "ffmpeg.exe");
+                if (File.Exists(localYt) && File.Exists(localFf))
+                {
+                    extractedBinDir = localBin;
+                    return;
+                }
+
+                string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                string targetDir = Path.Combine(appData, "VibePlayer", "bin");
+                if (!Directory.Exists(targetDir)) Directory.CreateDirectory(targetDir);
+
+                ExtractResource("bin/yt-dlp.exe", Path.Combine(targetDir, "yt-dlp.exe"));
+                ExtractResource("bin/ffmpeg.exe", Path.Combine(targetDir, "ffmpeg.exe"));
+
+                extractedBinDir = targetDir;
+            }
+            catch (Exception ex)
+            {
+                try { File.AppendAllText(Path.Combine(baseDir, "error.log"), "Extract tools error: " + ex.Message + "\r\n"); } catch {}
+            }
+        }
+
+        private static void ExtractResource(string resName, string destPath)
+        {
+            try
+            {
+                if (File.Exists(destPath))
+                {
+                    FileInfo fi = new FileInfo(destPath);
+                    if (fi.Length > 1024 * 1024) return;
+                }
+
+                Stream s = currentAsm.GetManifestResourceStream(resName);
+                if (s == null) s = currentAsm.GetManifestResourceStream(resName.Replace('/', '\\'));
+                if (s == null) s = currentAsm.GetManifestResourceStream(resName.Replace('/', '.'));
+                if (s == null)
+                {
+                    foreach (string n in currentAsm.GetManifestResourceNames())
+                    {
+                        if (n.EndsWith("yt-dlp.exe", StringComparison.OrdinalIgnoreCase) && resName.Contains("yt-dlp"))
+                        {
+                            s = currentAsm.GetManifestResourceStream(n);
+                            break;
+                        }
+                        if (n.EndsWith("ffmpeg.exe", StringComparison.OrdinalIgnoreCase) && resName.Contains("ffmpeg"))
+                        {
+                            s = currentAsm.GetManifestResourceStream(n);
+                            break;
+                        }
+                    }
+                }
+
+                if (s != null)
+                {
+                    using (s)
+                    using (var fs = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        byte[] buf = new byte[1024 * 1024];
+                        int read;
+                        while ((read = s.Read(buf, 0, buf.Length)) > 0)
+                        {
+                            fs.Write(buf, 0, read);
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
 
         private static string GetYtDlpPath()
         {
+            if (!string.IsNullOrEmpty(extractedBinDir))
+            {
+                string p = Path.Combine(extractedBinDir, "yt-dlp.exe");
+                if (File.Exists(p)) return p;
+            }
+            string localYt = Path.Combine(baseDir, @"bin\yt-dlp.exe");
+            if (File.Exists(localYt)) return localYt;
+
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string appDataYt = Path.Combine(appData, "VibePlayer", "bin", "yt-dlp.exe");
+            if (File.Exists(appDataYt)) return appDataYt;
+
             string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string wingetYt = Path.Combine(userProfile, @"AppData\Local\Microsoft\WinGet\Packages\yt-dlp.yt-dlp_Microsoft.Winget.Source_8wekyb3d8bbwe\yt-dlp.exe");
-            string localYt = Path.Combine(baseDir, @"bin\yt-dlp.exe");
-            string rootYt = Path.Combine(baseDir, @"yt-dlp.exe");
-            if (File.Exists(localYt)) return localYt;
-            if (File.Exists(rootYt)) return rootYt;
             if (File.Exists(wingetYt)) return wingetYt;
+
             return "yt-dlp.exe";
         }
 
         private static string GetFfmpegDir()
         {
-            string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string wingetFfmpeg = Path.Combine(userProfile, @"AppData\Local\Microsoft\WinGet\Packages\yt-dlp.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-N-126374-g089a48eb36-win64-gpl\bin");
+            if (!string.IsNullOrEmpty(extractedBinDir))
+            {
+                string p = Path.Combine(extractedBinDir, "ffmpeg.exe");
+                if (File.Exists(p)) return extractedBinDir;
+            }
             string localBin = Path.Combine(baseDir, "bin");
             if (File.Exists(Path.Combine(localBin, "ffmpeg.exe"))) return localBin;
+
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string appDataBin = Path.Combine(appData, "VibePlayer", "bin");
+            if (File.Exists(Path.Combine(appDataBin, "ffmpeg.exe"))) return appDataBin;
+
+            string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string wingetFfmpeg = Path.Combine(userProfile, @"AppData\Local\Microsoft\WinGet\Packages\yt-dlp.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-N-126374-g089a48eb36-win64-gpl\bin");
             if (File.Exists(Path.Combine(wingetFfmpeg, "ffmpeg.exe"))) return wingetFfmpeg;
+
             return "";
         }
 
@@ -83,6 +179,8 @@ namespace VibePlayer
             AppDomain.CurrentDomain.UnhandledException += (s, e) => {
                 try { File.WriteAllText(Path.Combine(baseDir, "error.log"), e.ExceptionObject.ToString()); } catch {}
             };
+
+            EnsureExtractedTools();
 
             // Try port 5173, if busy try next ports
             for (int p = 5173; p <= 5190; p++)
